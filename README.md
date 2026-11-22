@@ -2,6 +2,8 @@
 
 A full-stack blogging platform where users can sign up, write rich-text posts with featured images, and manage their own content. Built with React and Appwrite as the backend.
 
+**Live Demo:** [appwrite-megablog-seven.vercel.app](https://appwrite-megablog-seven.vercel.app)
+
 ## Features
 - User authentication (signup, login, logout) using Appwrite Auth
 - Create, edit and delete blog posts
