@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 import { useSelector } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
@@ -7,14 +7,17 @@ import Input from '../Input.jsx'
 import Select from '../Select.jsx'
 import RTE from '../RTE.jsx'
 import appwriteService from '../../appwrite/config'
+import { POST_CATEGORIES } from '../../constants/categories.js'
 
 
 function PostForm({post}) {
-  const {register, handleSubmit, setValue, control,getValues} = useForm({
+  const [submitError, setSubmitError] = useState('')
+  const {register, handleSubmit, setValue, control, getValues, formState: { isSubmitting }} = useForm({
     defaultValues: {
       title: post?.title || '',
       slug:post?.slug || '',
       content:post?.content || '',
+      category: post?.category || 'General',
       status: post?.status || 'active',
     }
   })
@@ -25,37 +28,42 @@ function PostForm({post}) {
   const previousTitle = useRef(title)
 
   const submit = async (data) => {
-    if(post){
-      const file = data.image[0]? await appwriteService.uploadFile(data.image[0]) : null
+    setSubmitError('')
+    let uploadedFileId = null
 
-      if(file){
-        appwriteService.deleteFile(post.featuredImage)
+    try {
+      const imageFile = data.image?.[0]
+      if (imageFile) {
+        const uploadedFile = await appwriteService.uploadFile(imageFile)
+        if (!uploadedFile) throw new Error('Image upload failed')
+        uploadedFileId = uploadedFile.$id
       }
 
-      const dbPost = await appwriteService.updatePost(post.$id, {
-        ...data,
-        featuredImage: file? file.$id : undefined,
-          })
+      if (post) {
+        const dbPost = await appwriteService.updatePost(post.$id, {
+          ...data,
+          featuredImage: uploadedFileId || post.featuredImage,
+        })
 
-        if(dbPost){
-          navigate(`/post/${dbPost.$id}`)
+        if (!dbPost) throw new Error('Post update failed')
+        if (uploadedFileId && post.featuredImage) {
+          await appwriteService.deleteFile(post.featuredImage)
         }
-    
-    }
-    else{
-      const file = await appwriteService.uploadFile(data.image[0]);
-
-      if(file){
-        const fileId  = file.$id
-        data.featuredImage = fileId
+        navigate(`/post/${dbPost.$id}`)
+      } else {
+        if (!uploadedFileId) throw new Error('Featured image is required')
         const dbPost = await appwriteService.createPost({
           ...data,
-          userId: userData.$id
+          featuredImage: uploadedFileId,
+          userId: userData.$id,
         })
-        if(dbPost){
-          navigate(`/post/${dbPost.$id}`)
-        }
+
+        if (!dbPost) throw new Error('Post creation failed')
+        navigate(`/post/${dbPost.$id}`)
       }
+    } catch {
+      if (uploadedFileId) await appwriteService.deleteFile(uploadedFileId)
+      setSubmitError('Post could not be saved. Check your Appwrite permissions and try again.')
     }
   }
 
@@ -116,13 +124,20 @@ function PostForm({post}) {
                     </div>
                 )}
                 <Select
+                    options={POST_CATEGORIES}
+                    label="Category"
+                    className="mb-4"
+                    {...register("category", { required: true })}
+                />
+                <Select
                     options={["active", "inactive"]}
                     label="Status"
                     className="mb-4"
                     {...register("status", { required: true })}
                 />
-                <Button type="submit" bgColor={post ? "bg-green-500" : undefined} className="w-full">
-                    {post ? "Update" : "Submit"}
+                {submitError && <p className="mb-3 text-sm text-red-700" role="alert">{submitError}</p>}
+                <Button type="submit" bgColor={post ? "bg-green-500" : undefined} className="w-full" disabled={isSubmitting}>
+                    {isSubmitting ? 'Saving...' : post ? "Update" : "Submit"}
                 </Button>
             </div>
         </form>

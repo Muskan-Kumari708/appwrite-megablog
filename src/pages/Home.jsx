@@ -5,7 +5,9 @@ import Container from '../components/container/Container.jsx'
 import PostCard from '../components/PostCard.jsx'
 import Button from '../components/Button.jsx'
 import PostsErrorState from '../components/PostsErrorState.jsx'
+import PostFilters from '../components/PostFilters.jsx'
 import { useSelector } from 'react-redux'
+import { getPostCategory } from '../constants/categories.js'
 
 function Hero({ authStatus }) {
     return (
@@ -39,12 +41,21 @@ function Home() {
     const [loadingPosts, setLoadingPosts] = useState(true)
     const [postsError, setPostsError] = useState(null)
     const [retryCount, setRetryCount] = useState(0)
+    const [search, setSearch] = useState('')
+    const [category, setCategory] = useState('all')
     const authStatus = useSelector((state) => state.auth.status)
     const retryPosts = () => {
         setPostsError(null)
         setLoadingPosts(true)
         setRetryCount((count) => count + 1)
     }
+    const filteredPosts = posts.filter((post) => {
+        const contentText = (post.content || '').replace(/<[^>]*>/g, ' ')
+        const searchableText = `${post.title || ''} ${contentText} ${getPostCategory(post)}`.toLowerCase()
+        const matchesSearch = searchableText.includes(search.trim().toLowerCase())
+        const matchesCategory = category === 'all' || getPostCategory(post) === category
+        return matchesSearch && matchesCategory
+    })
 
     useEffect(() => {
         if (authStatus !== true) return undefined
@@ -140,14 +151,23 @@ function Home() {
             <Hero authStatus={authStatus} />
             <div className="py-8 sm:py-12">
                 <Container>
-
-                    <div className="flex flex-wrap">
-                        {posts.map((post) => (
+                    <PostFilters
+                        search={search}
+                        onSearchChange={setSearch}
+                        category={category}
+                        onCategoryChange={setCategory}
+                    />
+                    {filteredPosts.length === 0 ? (
+                        <p className="py-8 text-center text-stone-600">No posts match your search.</p>
+                    ) : (
+                        <div className="flex flex-wrap">
+                        {filteredPosts.map((post) => (
                             <div key={post.$id} className="p-2 w-full sm:w-1/2 lg:w-1/4">
                                 <PostCard {...post} />
                             </div>
                         ))}
-                    </div>
+                        </div>
+                    )}
                 </Container>
             </div>
         </div>

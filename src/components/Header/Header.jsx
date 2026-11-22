@@ -5,7 +5,21 @@ import Container from '../container/Container.jsx'
 import Logo from '../Logo.jsx'
 import LogOutBtn from './LogoutBtn.jsx'
 
-function Header() {
+function ThemeToggle({ darkMode, onToggleTheme, className = '' }) {
+  return (
+    <button
+      type="button"
+      onClick={onToggleTheme}
+      aria-label={darkMode ? 'Switch to light theme' : 'Switch to dark theme'}
+      aria-pressed={darkMode}
+      className={`rounded-full px-3 py-2 text-sm hover:bg-stone-700 hover:text-amber-400 ${className}`}
+    >
+      {darkMode ? '☀ Light' : '☾ Dark'}
+    </button>
+  )
+}
+
+function Header({ darkMode, onToggleTheme }) {
   const authStatus = useSelector((state) => state.auth.status)
   const navigate = useNavigate()
   const [menuOpen, setMenuOpen] = useState(false)
@@ -33,8 +47,14 @@ function Header() {
             </Link>
           </div>
 
+          <ThemeToggle
+            darkMode={darkMode}
+            onToggleTheme={onToggleTheme}
+            className="ml-auto mr-2 md:hidden"
+          />
+
           <button
-            className='ml-auto md:hidden p-2 rounded hover:bg-stone-700'
+            className='md:hidden p-2 rounded hover:bg-stone-700'
             onClick={() => setMenuOpen((prev) => !prev)}
             aria-label='Toggle menu'
           >
@@ -48,6 +68,9 @@ function Header() {
           </button>
 
           <ul className='hidden md:flex ml-auto items-center'>
+            <li>
+              <ThemeToggle darkMode={darkMode} onToggleTheme={onToggleTheme} />
+            </li>
             {navItems.map((item) =>
               item.active ? (
                 <li key={item.name}>

@@ -9,7 +9,23 @@ import Header from './components/Header/Header.jsx'
 
 function App() {
   const [loading, setLoading] = useState(true)
+  const [darkMode, setDarkMode] = useState(() => {
+    try {
+      return localStorage.getItem('megablog-theme') === 'dark'
+    } catch {
+      return false
+    }
+  })
   const dispatch = useDispatch()
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', darkMode)
+    try {
+      localStorage.setItem('megablog-theme', darkMode ? 'dark' : 'light')
+    } catch {
+      // Theme still works for this session when storage is unavailable.
+    }
+  }, [darkMode])
 
   useEffect(() => {
     authService.getCurrentUser()
@@ -32,7 +48,7 @@ function App() {
 
   return !loading ? (
     <div className='min-h-screen flex flex-col bg-stone-100 text-stone-800'>
-      <Header />
+      <Header darkMode={darkMode} onToggleTheme={() => setDarkMode((current) => !current)} />
       <main className='flex-1 w-full'>
         <Outlet />
       </main>
