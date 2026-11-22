@@ -1,0 +1,23 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: 'Poppins', sans-serif;
+}
+
+.post-featured-image {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  max-height: min(65vh, 42rem);
+  object-fit: contain;
+}
+
+.post-content img {
+  display: block;
+  width: auto !important;
+  max-width: 100% !important;
+  height: auto !important;
+  max-height: min(70vh, 42rem);
+  object-fit: contain;
+  margin: 1.5rem auto;
+}
