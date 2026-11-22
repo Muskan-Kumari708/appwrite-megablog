@@ -2,8 +2,6 @@
 
 A full-stack blogging platform where users can sign up, write rich-text posts with featured images, and manage their own content. Built with React and Appwrite as the backend.
 
-**Live Demo:** (add your deployed link here)
-
 ## Features
 - User authentication (signup, login, logout) using Appwrite Auth
 - Create, edit and delete blog posts
@@ -76,8 +74,6 @@ npm run preview
 3. Create a storage bucket for images
 4. Add your app's domain under **Settings > Platforms**
 5. Copy the IDs into your `.env` file
-
-
 
 ## Future Improvements
 - Comments and likes
